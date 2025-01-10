@@ -170,10 +170,10 @@ esp_err_t esp_lcd_new_panel_ili9488(const esp_lcd_panel_io_handle_t io,
 
     ili9488->madctl_val = LCD_CMD_MX_BIT | LCD_CMD_BGR_BIT;
     switch (panel_dev_config->rgb_ele_order) {
-    case ESP_LCD_COLOR_SPACE_RGB:
+    case LCD_RGB_ELEMENT_ORDER_RGB:
         ili9488->madctl_val &= ~LCD_CMD_BGR_BIT;
         break;
-    case ESP_LCD_COLOR_SPACE_BGR:
+    case LCD_RGB_ELEMENT_ORDER_BGR:
         break;
     default:
         ESP_GOTO_ON_FALSE(false, ESP_ERR_INVALID_ARG, err, TAG, "Unsupported color space");
@@ -390,9 +390,9 @@ static esp_err_t panel_ili9488_mirror(esp_lcd_panel_t *panel, bool mirror_x, boo
     esp_lcd_panel_io_handle_t io = ili9488->io;
 
     if (mirror_x) {
-        ili9488->madctl_val |= LCD_CMD_MX_BIT;
-    } else {
         ili9488->madctl_val &= ~LCD_CMD_MX_BIT;
+    } else {
+        ili9488->madctl_val |= LCD_CMD_MX_BIT;
     }
     if (mirror_y) {
         ili9488->madctl_val |= LCD_CMD_MY_BIT;
