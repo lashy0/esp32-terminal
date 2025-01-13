@@ -3,12 +3,14 @@
 #include "esp_err.h"
 #include "esp_log.h"
 #include "driver/gpio.h"
+#include "driver/ledc.h"
 #include "driver/spi_master.h"
 #include "esp_lcd_panel_io.h"
 #include "esp_lcd_panel_ops.h"
 #include "esp_lcd_panel_vendor.h"
 
 #include "ili9488.h"
+#include "lcd_backlight.h"
 
 static const char *TAG = "app_main";
 
@@ -30,12 +32,26 @@ static const char *TAG = "app_main";
 
 void app_main(void)
 {
-    ESP_LOGI(TAG, "Turn off LCD backlight...");
-    gpio_config_t bk_gpio_cong = {
-        .mode = GPIO_MODE_OUTPUT,
-        .pin_bit_mask = 1ULL << LCD_PIN_NUM_BL,
+    ESP_LOGI(TAG, "Initializing LCD backlight...");
+    backlight_config_t bk_config = {
+        .gpio_num = LCD_PIN_NUM_BL,
+        .leds_mode = LEDC_LOW_SPEED_MODE,
+        .leds_channel = LEDC_CHANNEL_0,
+        .leds_timer = LEDC_TIMER_0,
+        .duty_resolution = LEDC_TIMER_10_BIT,
+        .freq_hz = 5000,
     };
-    ESP_ERROR_CHECK(gpio_config(&bk_gpio_cong));
+
+    backlight_handle_t bk_handle;
+    ESP_ERROR_CHECK(backlight_init(&bk_config, &bk_handle));
+    ESP_ERROR_CHECK(backlight_set_brightness(&bk_handle, 0));
+
+    // ESP_LOGI(TAG, "Turn off LCD backlight...");
+    // gpio_config_t bk_gpio_cong = {
+    //     .mode = GPIO_MODE_OUTPUT,
+    //     .pin_bit_mask = 1ULL << LCD_PIN_NUM_BL,
+    // };
+    // ESP_ERROR_CHECK(gpio_config(&bk_gpio_cong));
 
     ESP_LOGI(TAG, "Initializing LCD bus...");
     spi_bus_config_t buscfg = {
@@ -90,8 +106,14 @@ void app_main(void)
     ESP_ERROR_CHECK(esp_lcd_panel_set_gap(panel_handle, 0, 0));
     ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle, true));
 
-    gpio_set_direction(LCD_PIN_NUM_BL, GPIO_MODE_OUTPUT);
-    gpio_set_level(LCD_PIN_NUM_BL, 1);
+    // gpio_set_direction(LCD_PIN_NUM_BL, GPIO_MODE_OUTPUT);
+    // gpio_set_level(LCD_PIN_NUM_BL, 1);
+
+    ESP_ERROR_CHECK(backlight_set_brightness(&bk_handle, 100));
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    ESP_ERROR_CHECK(backlight_set_brightness(&bk_handle, 50));
+    vTaskDelay(pdMS_TO_TICKS(5000));
+    ESP_ERROR_CHECK(backlight_set_brightness(&bk_handle, 100));
 
     uint16_t color = 0xF800; // Красный
 
