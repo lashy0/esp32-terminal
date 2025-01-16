@@ -87,6 +87,12 @@ lv_obj_t *value_co2 = NULL;
 lv_obj_t *value_voc = NULL;
 lv_obj_t *value_iaq = NULL;
 
+lv_obj_t *bar_voc = NULL;
+lv_obj_t *bar_iaq = NULL;
+
+lv_obj_t *arc_pressure = NULL;
+lv_obj_t *arc_co2 = NULL;
+
 void create_ui(void)
 {
     lv_obj_t *scr = lv_scr_act();
@@ -146,152 +152,219 @@ void create_ui(void)
 
     //
 
-    // Style frame indicator voc
-    static lv_style_t style_frame_voc;
-    lv_style_init(&style_frame_voc);
-    lv_style_set_radius(&style_frame_voc, 15);
-    lv_style_set_bg_color(&style_frame_voc, lv_color_black());
-    lv_style_set_bg_opa(&style_frame_voc, LV_OPA_COVER);
-    lv_style_set_pad_all(&style_frame_voc, 10);
+    // Style frame indicator voc and iaq
+    static lv_style_t style_frame_voc_iaq;
+    lv_style_init(&style_frame_voc_iaq);
+    lv_style_set_radius(&style_frame_voc_iaq, 15);
+    lv_style_set_bg_color(&style_frame_voc_iaq, lv_color_black());
+    lv_style_set_bg_opa(&style_frame_voc_iaq, LV_OPA_COVER);
+    lv_style_set_pad_all(&style_frame_voc_iaq, 10);
+
+    // Style label voc and iaq
+    static lv_style_t style_text_voc_iaq_label;
+    lv_style_init(&style_text_voc_iaq_label);
+    lv_style_set_text_color(&style_text_voc_iaq_label, lv_color_white());
+    lv_style_set_text_font(&style_text_voc_iaq_label, &lv_font_montserrat_14);
+
+    // Style value voc and iaq
+    static lv_style_t style_value_voc_iaq;
+    lv_style_init(&style_value_voc_iaq);
+    lv_style_set_text_color(&style_value_voc_iaq, lv_color_white());
+    lv_style_set_text_font(&style_value_voc_iaq, &lv_font_montserrat_14);
+
+    // Style bar voc
+    static lv_style_t style_bar_voc_iaq_bg;
+    static lv_style_t style_bar_voc_iaq_indic;
+
+    lv_style_init(&style_bar_voc_iaq_bg);
+    lv_style_set_bg_color(&style_bar_voc_iaq_bg, lv_color_hex(0xededed));
+
+    lv_style_init(&style_bar_voc_iaq_indic);
+    lv_style_set_bg_opa(&style_bar_voc_iaq_indic, LV_OPA_COVER);
+    lv_style_set_bg_color(&style_bar_voc_iaq_indic, lv_color_white());
 
     // Create frame indicator voc
     lv_obj_t *frame_voc = lv_obj_create(scr);
     lv_obj_set_size(frame_voc, 310, 75);
     lv_obj_align(frame_voc, LV_ALIGN_TOP_LEFT, 15, 145);
-    lv_obj_add_style(frame_voc, &style_frame_voc, 0);
+    lv_obj_add_style(frame_voc, &style_frame_voc_iaq, 0);
     lv_obj_clear_flag(frame_voc, LV_OBJ_FLAG_SCROLLABLE);
-
-    // Style label voc
-    static lv_style_t style_text_voc_label;
-    lv_style_init(&style_text_voc_label);
-    lv_style_set_text_color(&style_text_voc_label, lv_color_white());
-    lv_style_set_text_font(&style_text_voc_label, &lv_font_montserrat_14);
-
-    // Style value voc
-    static lv_style_t style_value_voc;
-    lv_style_init(&style_value_voc);
-    lv_style_set_text_color(&style_value_voc, lv_color_white());
-    lv_style_set_text_font(&style_value_voc, &lv_font_montserrat_26);
 
     // Create label voc
     lv_obj_t *label_voc = lv_label_create(frame_voc);
     lv_label_set_text(label_voc, "Voc:");
-    lv_obj_add_style(label_voc, &style_text_voc_label, 0);
+    lv_obj_add_style(label_voc, &style_text_voc_iaq_label, 0);
     lv_obj_align(label_voc, LV_ALIGN_TOP_LEFT, 0, 0);
 
     // Create value voc
     value_voc = lv_label_create(frame_voc);
     lv_label_set_text(value_voc, "0 ppb");
-    lv_obj_add_style(value_voc, &style_value_voc, 0);
-    lv_obj_align(value_voc, LV_ALIGN_TOP_LEFT, 0, 25);
+    lv_obj_add_style(value_voc, &style_value_voc_iaq, 0);
+    lv_obj_align(value_voc, LV_ALIGN_TOP_RIGHT, 0, 0);
+
+    // Create bar voc
+    bar_voc = lv_bar_create(frame_voc);
+    lv_obj_set_size(bar_voc, 290, 27);
+    lv_obj_center(bar_voc);
+    lv_bar_set_range(bar_voc, 0, 5000);
+    lv_bar_set_value(bar_voc, 70, LV_ANIM_OFF);
+    lv_obj_align(bar_voc, LV_ALIGN_TOP_LEFT, 0, 25);
+
+    lv_obj_add_style(bar_voc, &style_bar_voc_iaq_bg, 0);
+    lv_obj_add_style(bar_voc, &style_bar_voc_iaq_indic, LV_PART_INDICATOR);
 
     //
-
-    // Style frame indicator iaq
-    static lv_style_t style_frame_iaq;
-    lv_style_init(&style_frame_iaq);
-    lv_style_set_radius(&style_frame_iaq, 15);
-    lv_style_set_bg_color(&style_frame_iaq, lv_color_black());
-    lv_style_set_bg_opa(&style_frame_iaq, LV_OPA_COVER);
-    lv_style_set_pad_all(&style_frame_iaq, 10);
 
     // Create frame indicator iaq
     lv_obj_t *frame_iaq = lv_obj_create(scr);
     lv_obj_set_size(frame_iaq, 310, 75);
     lv_obj_align(frame_iaq, LV_ALIGN_TOP_LEFT, 15, 230);
-    lv_obj_add_style(frame_iaq, &style_frame_iaq, 0);
+    lv_obj_add_style(frame_iaq, &style_frame_voc_iaq, 0);
     lv_obj_clear_flag(frame_iaq, LV_OBJ_FLAG_SCROLLABLE);
-
-    // Style label iaq
-    static lv_style_t style_text_iaq_label;
-    lv_style_init(&style_text_iaq_label);
-    lv_style_set_text_color(&style_text_iaq_label, lv_color_white());
-    lv_style_set_text_font(&style_text_iaq_label, &lv_font_montserrat_14);
-
-    // Style value iaq
-    static lv_style_t style_value_iaq;
-    lv_style_init(&style_value_iaq);
-    lv_style_set_text_color(&style_value_iaq, lv_color_white());
-    lv_style_set_text_font(&style_value_iaq, &lv_font_montserrat_26);
 
     // Create label iaq
     lv_obj_t *label_iaq = lv_label_create(frame_iaq);
     lv_label_set_text(label_iaq, "Iaq:");
-    lv_obj_add_style(label_iaq, &style_text_iaq_label, 0);
+    lv_obj_add_style(label_iaq, &style_text_voc_iaq_label, 0);
     lv_obj_align(label_iaq, LV_ALIGN_TOP_LEFT, 0, 0);
 
     // Create value iaq
     value_iaq = lv_label_create(frame_iaq);
     lv_label_set_text(value_iaq, "0");
-    lv_obj_add_style(value_iaq, &style_value_iaq, 0);
-    lv_obj_align(value_iaq, LV_ALIGN_TOP_LEFT, 0, 25);
+    lv_obj_add_style(value_iaq, &style_value_voc_iaq, 0);
+    lv_obj_align(value_iaq, LV_ALIGN_TOP_RIGHT, 0, 0);
+
+    // Create bar iaq
+    bar_iaq = lv_bar_create(frame_iaq);
+    lv_obj_set_size(bar_iaq, 290, 27);
+    lv_obj_center(bar_iaq);
+    lv_bar_set_range(bar_iaq, 0, 100);
+    lv_bar_set_value(bar_iaq, 70, LV_ANIM_OFF);
+    lv_obj_align(bar_iaq, LV_ALIGN_TOP_LEFT, 0, 25);
+
+    lv_obj_add_style(bar_iaq, &style_bar_voc_iaq_bg, 0);
+    lv_obj_add_style(bar_iaq, &style_bar_voc_iaq_indic, LV_PART_INDICATOR);
 
     //
 
-    // Style frame indicator pressure
-    static lv_style_t style_frame_pressure;
-    lv_style_init(&style_frame_pressure);
-    lv_style_set_radius(&style_frame_pressure, 15);
-    lv_style_set_bg_color(&style_frame_pressure, lv_color_black());
-    lv_style_set_bg_opa(&style_frame_pressure, LV_OPA_COVER);
+    // Style frame indicator pressure and co2
+    static lv_style_t style_frame_pressure_co2;
+    lv_style_init(&style_frame_pressure_co2);
+    lv_style_set_radius(&style_frame_pressure_co2, 15);
+    lv_style_set_bg_color(&style_frame_pressure_co2, lv_color_black());
+    lv_style_set_bg_opa(&style_frame_pressure_co2, LV_OPA_COVER);
+    lv_style_set_pad_all(&style_frame_pressure_co2, 10);
+
+    // Style label pressure and co2
+    static lv_style_t style_text_value_pressure_co2;
+    lv_style_init(&style_text_value_pressure_co2);
+    lv_style_set_text_color(&style_text_value_pressure_co2, lv_color_white());
+    lv_style_set_text_font(&style_text_value_pressure_co2, &lv_font_montserrat_14);
+
+    // Style arc pressure and co2
+    static lv_style_t style_arc_pressure_co2_bg;
+    static lv_style_t style_arc_pressure_co2_indic;
+
+    lv_style_init(&style_arc_pressure_co2_bg);
+    lv_style_set_bg_color(&style_arc_pressure_co2_bg, lv_color_hex(0xededed));
+
+    lv_style_init(&style_arc_pressure_co2_indic);
+    lv_style_set_bg_opa(&style_arc_pressure_co2_indic, LV_OPA_COVER);
+    lv_style_set_bg_color(&style_arc_pressure_co2_indic, lv_color_white());
 
     // Create frame indicator pressure
     lv_obj_t *frame_indic_pressure = lv_obj_create(scr);
     lv_obj_set_size(frame_indic_pressure, 125, 125);
     lv_obj_align(frame_indic_pressure, LV_ALIGN_TOP_RIGHT, -15, 43);
-    lv_obj_add_style(frame_indic_pressure, &style_frame_pressure, 0);
+    lv_obj_add_style(frame_indic_pressure, &style_frame_pressure_co2, 0);
     lv_obj_clear_flag(frame_indic_pressure, LV_OBJ_FLAG_SCROLLABLE);
-
-    // Style label pressure
-    static lv_style_t style_text_value_pressure;
-    lv_style_init(&style_text_value_pressure);
-    lv_style_set_text_color(&style_text_value_pressure, lv_color_white());
-    lv_style_set_text_font(&style_text_value_pressure, &lv_font_montserrat_14);
 
     // Create label pressure
     lv_obj_t *label_pressure = lv_label_create(frame_indic_pressure);
     lv_label_set_text(label_pressure, "Pressure:");
-    lv_obj_add_style(label_pressure, &style_text_value_pressure, 0);
+    lv_obj_add_style(label_pressure, &style_text_value_pressure_co2, 0);
     lv_obj_align(label_pressure, LV_ALIGN_TOP_LEFT, 0, 0);
 
-    value_pressure = lv_label_create(frame_indic_pressure);
-    lv_label_set_text(value_pressure, "746 mmHg");
-    lv_obj_add_style(value_pressure, &style_text_value_pressure, 0);
-    lv_obj_align(value_pressure, LV_ALIGN_TOP_LEFT, 0, 25);
+    // Create arc pressure
+    arc_pressure = lv_arc_create(frame_indic_pressure);
+    lv_obj_set_size(arc_pressure, 105, 105);
+    lv_obj_center(arc_pressure);
+    lv_obj_remove_style(arc_pressure, NULL, LV_PART_KNOB);
+    lv_obj_clear_flag(arc_pressure, LV_OBJ_FLAG_CLICKABLE);
+    lv_arc_set_angles(arc_pressure, 0, 180);
+    lv_arc_set_value(arc_pressure, 10);
+    lv_arc_set_bg_angles(arc_pressure, 0, 180);
+    lv_arc_set_rotation(arc_pressure, 180);
+    lv_arc_set_range(arc_pressure, 0, 120);
+    lv_obj_align(arc_pressure, LV_ALIGN_TOP_LEFT, 0, 25);
+
+    lv_obj_add_style(arc_pressure, &style_arc_pressure_co2_bg, LV_PART_MAIN);
+    lv_obj_add_style(arc_pressure, &style_arc_pressure_co2_indic, LV_PART_INDICATOR);
+
+    // Create value pressure
+    // value_pressure = lv_label_create(frame_indic_pressure);
+    // lv_label_set_text(value_pressure, "746 mmHg");
+    // lv_obj_add_style(value_pressure, &style_text_value_pressure_co2, 0);
+    // lv_obj_align(value_pressure, LV_ALIGN_TOP_LEFT, 0, 25);
+
+    value_pressure = lv_label_create(arc_pressure);
+    lv_label_set_text(value_pressure, "746");
+    lv_obj_align(value_pressure, LV_ALIGN_CENTER, 0, -10);
+    lv_obj_add_style(value_pressure, &style_text_value_pressure_co2, 0);
+
+    // Create value mara pressure
+    lv_obj_t *label_arc_value_pressure_mera = lv_label_create(arc_pressure);
+    lv_label_set_text(label_arc_value_pressure_mera, "mmHg");
+    lv_obj_align(label_arc_value_pressure_mera, LV_ALIGN_CENTER, 0, 10);
+    lv_obj_add_style(label_arc_value_pressure_mera, &style_text_value_pressure_co2, 0);
 
     //
-
-    // Style frame indicator co2
-    static lv_style_t style_frame_co2;
-    lv_style_init(&style_frame_co2);
-    lv_style_set_radius(&style_frame_co2, 15);
-    lv_style_set_bg_color(&style_frame_co2, lv_color_black());
-    lv_style_set_bg_opa(&style_frame_co2, LV_OPA_COVER);
 
     // Create frame indicator co2
     lv_obj_t *frame_indic_co2 = lv_obj_create(scr);
     lv_obj_set_size(frame_indic_co2, 125, 125);
     lv_obj_align(frame_indic_co2, LV_ALIGN_TOP_RIGHT, -15, 179);
-    lv_obj_add_style(frame_indic_co2, &style_frame_co2, 0);
+    lv_obj_add_style(frame_indic_co2, &style_frame_pressure_co2, 0);
     lv_obj_clear_flag(frame_indic_co2, LV_OBJ_FLAG_SCROLLABLE);
-
-    // Style label co2
-    static lv_style_t style_text_value_co2;
-    lv_style_init(&style_text_value_co2);
-    lv_style_set_text_color(&style_text_value_co2, lv_color_white());
-    lv_style_set_text_font(&style_text_value_co2, &lv_font_montserrat_14);
 
     // Create label co2
     lv_obj_t *label_co2 = lv_label_create(frame_indic_co2);
     lv_label_set_text(label_co2, "CO2:");
-    lv_obj_add_style(label_co2, &style_text_value_co2, 0);
+    lv_obj_add_style(label_co2, &style_text_value_pressure_co2, 0);
     lv_obj_align(label_co2, LV_ALIGN_TOP_LEFT, 0, 0);
 
     // Create value co2
-    value_co2 = lv_label_create(frame_indic_co2);
-    lv_label_set_text(value_co2, "0 ppm");
-    lv_obj_add_style(value_co2, &style_text_value_co2, 0);
-    lv_obj_align(value_co2, LV_ALIGN_TOP_LEFT, 0, 25);
+    // value_co2 = lv_label_create(frame_indic_co2);
+    // lv_label_set_text(value_co2, "0 ppm");
+    // lv_obj_add_style(value_co2, &style_text_value_pressure_co2, 0);
+    // lv_obj_align(value_co2, LV_ALIGN_TOP_LEFT, 0, 25);
+
+    // Create arc co2
+    arc_co2 = lv_arc_create(frame_indic_co2);
+    lv_obj_set_size(arc_co2, 105, 105);
+    lv_obj_center(arc_co2);
+    lv_obj_remove_style(arc_co2, NULL, LV_PART_KNOB);
+    lv_obj_clear_flag(arc_co2, LV_OBJ_FLAG_CLICKABLE);
+    lv_arc_set_angles(arc_co2, 0, 180);
+    lv_arc_set_value(arc_co2, 10);
+    lv_arc_set_bg_angles(arc_co2, 0, 180);
+    lv_arc_set_rotation(arc_co2, 180);
+    lv_arc_set_range(arc_co2, 0, 120);
+    lv_obj_align(arc_co2, LV_ALIGN_TOP_LEFT, 0, 25);
+
+    lv_obj_add_style(arc_co2, &style_arc_pressure_co2_bg, LV_PART_MAIN);
+    lv_obj_add_style(arc_co2, &style_arc_pressure_co2_indic, LV_PART_INDICATOR);
+
+    value_co2 = lv_label_create(arc_co2);
+    lv_label_set_text(value_co2, "828");
+    lv_obj_align(value_co2, LV_ALIGN_CENTER, 0, -10);
+    lv_obj_add_style(value_co2, &style_text_value_pressure_co2, 0);
+
+    // Create value mara pressure
+    lv_obj_t *label_arc_value_co2_mera = lv_label_create(arc_co2);
+    lv_label_set_text(label_arc_value_co2_mera, "ppm");
+    lv_obj_align(label_arc_value_co2_mera, LV_ALIGN_CENTER, 0, 10);
+    lv_obj_add_style(label_arc_value_co2_mera, &style_text_value_pressure_co2, 0);
 }
 
 // BLE
@@ -908,8 +981,10 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
 
                 if (value_pressure) {
                     char temp_str[16];
-                    snprintf(temp_str, sizeof(temp_str), "%d mmHg", pressure);
+                    snprintf(temp_str, sizeof(temp_str), "%d", pressure);
                     lv_label_set_text(value_pressure, temp_str);
+
+                    lv_arc_set_value(arc_pressure, pressure);
                 }
             } else {
                 ESP_LOGE(TAG_BLE, "Unexpected pressure value length: %d", p_data->notify.value_len);
@@ -927,8 +1002,10 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
 
                 if (value_co2) {
                     char temp_str[16];
-                    snprintf(temp_str, sizeof(temp_str), "%d ppm", co2);
+                    snprintf(temp_str, sizeof(temp_str), "%d", co2);
                     lv_label_set_text(value_co2, temp_str);
+
+                    lv_arc_set_value(arc_co2, co2);
                 }
             } else {
                 ESP_LOGE(TAG_BLE, "Unexpected co2 value length: %d", p_data->notify.value_len);
@@ -948,6 +1025,8 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
                     char temp_str[16];
                     snprintf(temp_str, sizeof(temp_str), "%d ppb", voc);
                     lv_label_set_text(value_voc, temp_str);
+
+                    lv_bar_set_value(bar_voc, voc, LV_ANIM_OFF);
                 }
             } else {
                 ESP_LOGE(TAG_BLE, "Unexpected voc value length: %d", p_data->notify.value_len);
@@ -967,6 +1046,8 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
                     char temp_str[16];
                     snprintf(temp_str, sizeof(temp_str), "%d", iaq);
                     lv_label_set_text(value_iaq, temp_str);
+
+                    lv_bar_set_value(bar_iaq, iaq, LV_ANIM_OFF);
                 }
             } else {
                 ESP_LOGE(TAG_BLE, "Unexpected iaq value length: %d", p_data->notify.value_len);
