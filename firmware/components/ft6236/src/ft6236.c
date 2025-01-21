@@ -30,6 +30,12 @@ static const char *TAG = "lcd_touch_ft6236";
 #define FT6236_TOUCH2_YH                0x0B
 #define FT6236_TOUCH2_YL                0x0C
 
+#define FT6236_PANEL_ID                 0xA8
+#define FT6236_TH_GROUP                 0x80
+#define FT6236_CTRL                     0x86
+#define FT6236_TOUCHRATE_ACTIVE         0x88
+#define FT6236_TH_DIFF                  0x85
+
 static esp_err_t esp_lcd_touch_ft6236_read_data(esp_lcd_touch_handle_t tp);
 static bool esp_lcd_touch_ft6236_get_xy(esp_lcd_touch_handle_t tp, uint16_t *x, uint16_t *y, uint16_t *strength, uint8_t *point_num, uint8_t max_point_num);
 static esp_err_t esp_lcd_touch_ft6236_del(esp_lcd_touch_handle_t tp);
@@ -94,12 +100,12 @@ esp_err_t esp_lcd_touch_new_i2c_ft6236(const esp_lcd_panel_io_handle_t io,
     }
 
     /* Reset controller */
-    // ret = touch_ft6236_reset(esp_lcd_touch_ft6236);
-    // ESP_GOTO_ON_ERROR(ret, err, TAG, "FT6236 reset failed");
+    ret = touch_ft6236_reset(esp_lcd_touch_ft6236);
+    ESP_GOTO_ON_ERROR(ret, err, TAG, "FT6236 reset failed");
 
     /* Init controller */
-    // ret = touch_ft6236_init(esp_lcd_touch_ft6236);
-    // ESP_GOTO_ON_ERROR(ret, err, TAG, "FT6236 init failed");
+    ret = touch_ft6236_init(esp_lcd_touch_ft6236);
+    ESP_GOTO_ON_ERROR(ret, err, TAG, "FT6236 init failed");
 
 err:
     if (ret != ESP_OK) {
@@ -226,6 +232,25 @@ static esp_err_t touch_ft6236_i2c_write(esp_lcd_touch_handle_t tp, uint8_t reg, 
 static esp_err_t touch_ft6236_init(esp_lcd_touch_handle_t tp)
 {
     esp_err_t ret = ESP_OK;
+    uint8_t reg_val;
+
+    ret = touch_ft6236_i2c_read(tp, FT6236_PANEL_ID, &reg_val, 1);
+    ESP_LOGI(TAG, "FT6236 detected with ID: 0x%02X", reg_val);
+
+    ret = touch_ft6236_i2c_write(tp, FT6236_DEVICE_MODE, 0x00);
+    ESP_RETURN_ON_ERROR(ret, TAG, "Failed to set normal operation mode");
+
+    ret = touch_ft6236_i2c_write(tp, FT6236_TH_GROUP, 0x20);
+    ESP_RETURN_ON_ERROR(ret, TAG, "Failde to set touch threshold");
+
+    ret = touch_ft6236_i2c_write(tp, FT6236_CTRL, 0x01);
+    ESP_RETURN_ON_ERROR(ret, TAG, "Failed to set auto-monitor mode");
+
+    ret = touch_ft6236_i2c_write(tp, FT6236_TOUCHRATE_ACTIVE, 0x0A);
+    ESP_RETURN_ON_ERROR(ret, TAG, "Failed to set active mode report rate");
+
+    ret = touch_ft6236_i2c_write(tp, FT6236_TH_DIFF, 0x04);
+    ESP_RETURN_ON_ERROR(ret, TAG, "Failed to set jitter filter");
 
     return ret;
 }
